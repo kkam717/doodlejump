@@ -14,21 +14,12 @@ public class Doodle {
 
     public Doodle(Pane playerPane) { // associated playerPane with Doodle
         this.mainBody = new Rectangle(Constants.DOODLE_WIDTH, Constants.DOODLE_HEIGHT);
-        this.setupShapes();
-
-        playerPane.getChildren().addAll(this.mainBody);
-        // getChildren method is used to get the components(such as mainBody) in container.
-        this.moveDoodle(Constants.DOODLE_START_X, Constants.DOODLE_START_Y);
-        this.setVelocity(0); // of index 0, the base platform
-    }
-
-    /**
-     * Instead of the constructor, we set the position and color of the doodle in this helper method.
-     */
-    private void setupShapes() {
-        this.setPos(Constants.ROOT_CENTER_X, Constants.ROOT_CENTER_Y);
         this.mainBody.setFill(Constants.DOODLE_COLOR);
         this.mainBody.setStroke(Color.BLACK);
+
+        playerPane.getChildren().addAll(this.mainBody);
+        this.setPos(Constants.DOODLE_START_X, Constants.DOODLE_START_Y);
+        this.setVelocity(0);
     }
 
     /**

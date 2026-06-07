@@ -14,7 +14,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 
-import java.io.File;
+import java.io.InputStream;
 
 /**
  * This is our PaneOrganizer, top-level graphical class. Here we create instances of root, playerPane, scoreLabel,
@@ -49,10 +49,14 @@ public class PaneOrganizer {
      * @param root
      */
     public void backgroundImage(Pane root) {
-        File backgroundFile = new File("background.png");
-        Image image = backgroundFile.exists()
-                ? new Image(backgroundFile.toURI().toString(), false)
-                : null;
+        Image image = null;
+        try (InputStream stream = getClass().getResourceAsStream("/background.png")) {
+            if (stream != null) {
+                image = new Image(stream);
+            }
+        } catch (Exception ignored) {
+            image = null;
+        }
         if (image != null && !image.isError()) {
             ImageView iv = new ImageView(image);
             root.getChildren().add(iv);

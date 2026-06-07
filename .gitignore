@@ -1,2 +1,15 @@
 *.class
 out/
+target/
+dist/
+lib/
+web/downloads/*.dmg
+web/downloads/*.exe
+server/downloads/*.dmg
+server/downloads/*.exe
+!server/downloads/.gitkeep
+node_modules/
+server/node_modules/
+.idea/
+*.iml
+.DS_Store

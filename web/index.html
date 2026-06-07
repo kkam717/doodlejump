@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DoodleHopHop</title>
+    <link rel="icon" type="image/png" href="assets/icons/favicon.png" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-256.png" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <img class="app-icon" src="assets/icons/icon-128.png" width="96" height="96" alt="" />
+        <h1>DoodleHopHop</h1>
+        <p>Play in your browser or download the desktop app for Mac and Windows.</p>
+      </header>
+
+      <div class="layout">
+        <section class="game-shell">
+          <canvas id="game" width="450" height="800" aria-label="DoodleHopHop game"></canvas>
+          <div class="score-bar">
+            <span id="score">Score: 0</span>
+            <span id="high-score">High Score: 0</span>
+          </div>
+          <div class="toolbar">
+            <button id="restart-btn" type="button">Restart</button>
+            <button id="focus-btn" class="secondary" type="button">Focus Game</button>
+          </div>
+          <div class="touch-controls">
+            <button id="left-btn" type="button" aria-label="Move left">◀</button>
+            <button id="right-btn" type="button" aria-label="Move right">▶</button>
+          </div>
+        </section>
+
+        <aside class="sidebar">
+          <section class="card">
+            <h2>Download Desktop App</h2>
+            <p>Installers are served from this site after you build them locally.</p>
+            <ul class="download-list">
+              <li>
+                <a id="mac-download" href="#">
+                  macOS (.dmg)
+                  <small>Checking availability…</small>
+                </a>
+              </li>
+              <li>
+                <a id="win-download" href="#">
+                  Windows (.exe)
+                  <small>Checking availability…</small>
+                </a>
+              </li>
+            </ul>
+          </section>
+
+          <section class="card">
+            <h2>Controls</h2>
+            <ul>
+              <li><strong>Move:</strong> Arrow keys or A / D (one step per press)</li>
+              <li><strong>Mobile:</strong> Tap ◀ ▶ buttons</li>
+              <li><strong>Goal:</strong> Bounce upward and climb as high as you can</li>
+            </ul>
+          </section>
+
+          <section class="card">
+            <h2>Platform Colors</h2>
+            <ul>
+              <li>Green — normal bounce</li>
+              <li>Pink — super bounce</li>
+              <li>Light blue — moves horizontally</li>
+              <li>Dark blue — moves vertically</li>
+              <li>Red — crumbles when you land (no bounce)</li>
+              <li>White — bounces then breaks</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script type="module">
+      import { DoodleJumpGame } from "./js/game.js";
+      import { setupDownloads } from "./js/downloads.js";
+
+      const canvas = document.getElementById("game");
+      const scoreEl = document.getElementById("score");
+      const highScoreEl = document.getElementById("high-score");
+      const restartBtn = document.getElementById("restart-btn");
+      const focusBtn = document.getElementById("focus-btn");
+      const leftBtn = document.getElementById("left-btn");
+      const rightBtn = document.getElementById("right-btn");
+
+      const game = new DoodleJumpGame(canvas, {
+        onScore(score, highScore) {
+          scoreEl.textContent = `Score: ${score}`;
+          highScoreEl.textContent = `High Score: ${highScore}`;
+        },
+        onGameOver(highScore, isNewHigh) {
+          highScoreEl.textContent = isNewHigh
+            ? "New High Score!"
+            : `High Score: ${highScore}`;
+        },
+      });
+
+      restartBtn.addEventListener("click", () => game.restart());
+      focusBtn.addEventListener("click", () => canvas.focus());
+      canvas.tabIndex = 0;
+      canvas.focus();
+
+      leftBtn.addEventListener("click", () => game.moveLeft());
+      rightBtn.addEventListener("click", () => game.moveRight());
+
+      setupDownloads();
+      game.start();
+    </script>
+  </body>
+</html>

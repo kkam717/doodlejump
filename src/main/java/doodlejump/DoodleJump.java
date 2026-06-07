@@ -56,13 +56,13 @@ public class DoodleJump {
      */
     private void setupGame(){
         this.score = 0;
-        this.player = new Doodle(playerPane);
         this.playerPane.setOnKeyPressed((KeyEvent e) -> keyPress(e)); // lambda statement: KeyEvent handles KeyPressed
         this.playerPane.setFocusTraversable(true); // passed in true so that switch statement is executed
         this.playerPane.requestFocus();
 
         this.platforms = new ArrayList<>(); // we create an arraylist to store all variations of the platforms
         this.spawnStartingPlatform(); // adds initial platform to arraylist
+        this.player = new Doodle(playerPane);
 
         this.scoreLabel.setText("Score: 0");
         this.setUpTimeline();

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: doodlehop
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DOWNLOAD_MAC_URL
+        sync: false
+      - key: DOWNLOAD_WIN_URL
+        sync: false
