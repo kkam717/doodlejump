@@ -1,0 +1,89 @@
+name: Build installers
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install WiX Toolset
+        run: choco install wix --version=3.11.2 -y
+
+      - name: Build Windows installer
+        run: scripts\package-windows.bat
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: web/downloads/DoodleHopHop-1.0.0.exe
+
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Build macOS installer
+        run: ./scripts/package-mac.sh
+
+      - name: Upload macOS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-dmg
+          path: web/downloads/DoodleHopHop-1.0.0.dmg
+
+  publish-release:
+    needs: [build-windows, build-mac]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download installers
+        uses: actions/download-artifact@v4
+        with:
+          path: installers
+
+      - name: Publish to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="v1.0.0"
+          fi
+
+          DMG="installers/mac-dmg/DoodleHopHop-1.0.0.dmg"
+          EXE="installers/windows-exe/DoodleHopHop-1.0.0.exe"
+
+          if ! gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release create "$VERSION" \
+              --title "DoodleHopHop ${VERSION}" \
+              --notes "Desktop installers for DoodleHopHop ${VERSION}."
+          fi
+
+          gh release upload "$VERSION" "$DMG" "$EXE" --clobber
+
+          echo "Published:"
+          echo "  https://github.com/${{ github.repository }}/releases/download/${VERSION}/DoodleHopHop-1.0.0.dmg"
+          echo "  https://github.com/${{ github.repository }}/releases/download/${VERSION}/DoodleHopHop-1.0.0.exe"

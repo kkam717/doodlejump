@@ -23,6 +23,6 @@ services:
       - key: DOWNLOAD_MAC_URL
         value: https://github.com/kkam717/doodlejump/releases/download/v1.0.0/DoodleHopHop-1.0.0.dmg
       - key: DOWNLOAD_WIN_URL
-        sync: false
+        value: https://github.com/kkam717/doodlejump/releases/download/v1.0.0/DoodleHopHop-1.0.0.exe
       - key: ALLOWED_ORIGINS
         value: https://kkam717.github.io

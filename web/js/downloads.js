@@ -19,12 +19,22 @@ export async function setupDownloads() {
   }
 
   configureDirectLink(macLink, FALLBACK_DOWNLOADS.mac, "DoodleHopHop-1.0.0.dmg");
-  configureDirectLink(
-    winLink,
-    FALLBACK_DOWNLOADS.win,
-    "DoodleHopHop-1.0.0.exe",
-    "Windows build not published yet"
-  );
+
+  const winAvailable = await isRemoteAssetAvailable(FALLBACK_DOWNLOADS.win);
+  if (winAvailable) {
+    configureDirectLink(winLink, FALLBACK_DOWNLOADS.win, "DoodleHopHop-1.0.0.exe");
+  } else {
+    configureUnavailable(winLink, "Windows build publishing — check back soon");
+  }
+}
+
+async function isRemoteAssetAvailable(url) {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 function configureDirectLink(link, url, fileName, unavailableMessage) {
@@ -33,31 +43,13 @@ function configureDirectLink(link, url, fileName, unavailableMessage) {
   const note = link.querySelector("small");
   link.classList.remove("unavailable");
   link.href = url;
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
+  link.removeAttribute("target");
+  link.removeAttribute("rel");
   link.removeAttribute("download");
 
   if (note) {
     note.textContent = unavailableMessage || "Download from GitHub Releases";
   }
-
-  link.addEventListener(
-    "click",
-    async (event) => {
-      try {
-        const response = await fetch(url, { method: "HEAD" });
-        if (!response.ok) {
-          event.preventDefault();
-          if (note) {
-            note.textContent = unavailableMessage || "Installer not available yet";
-          }
-        }
-      } catch {
-        // Let the browser try the link anyway.
-      }
-    },
-    { once: true }
-  );
 }
 
 function configureLink(link, item) {
@@ -72,15 +64,9 @@ function configureLink(link, item) {
   }
 
   link.href = item.url;
-  if (item.source === "local") {
-    link.setAttribute("download", item.file);
-    link.removeAttribute("target");
-    link.removeAttribute("rel");
-  } else {
-    link.removeAttribute("download");
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-  }
+  link.removeAttribute("target");
+  link.removeAttribute("rel");
+  link.removeAttribute("download");
 
   if (note) {
     if (item.size) {
