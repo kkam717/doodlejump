@@ -22,8 +22,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Install WiX Toolset
-        run: choco install wix --version=3.11.2 -y
+      - name: Install WiX Toolset 3.11
+        shell: pwsh
+        run: |
+          $wixZip = "$env:RUNNER_TEMP\wix311-binaries.zip"
+          Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip" -OutFile $wixZip
+          Expand-Archive -Path $wixZip -DestinationPath "$env:RUNNER_TEMP\wix311" -Force
+          echo "$env:RUNNER_TEMP\wix311" >> $env:GITHUB_PATH
 
       - name: Build Windows installer
         run: scripts\package-windows.bat
@@ -57,6 +62,7 @@ jobs:
 
   publish-release:
     needs: [build-windows, build-mac]
+    if: ${{ !cancelled() && needs.build-windows.result == 'success' && needs.build-mac.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download installers
