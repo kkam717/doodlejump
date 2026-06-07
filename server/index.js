@@ -1,6 +1,8 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const { initDb, getStorageMode } = require("./db");
+const scoresRouter = require("./routes/scores");
 
 const app = express();
 const ROOT = path.join(__dirname, "..");
@@ -9,6 +11,8 @@ const DOWNLOADS_DIR = path.join(__dirname, "downloads");
 
 const MAC_FILE = "DoodleHopHop-1.0.0.dmg";
 const WIN_FILE = "DoodleHopHop-1.0.0.exe";
+
+app.use(express.json({ limit: "16kb" }));
 
 function resolveDownload(fileName, envUrl) {
   const localPath = path.join(DOWNLOADS_DIR, fileName);
@@ -39,7 +43,11 @@ function resolveDownload(fileName, envUrl) {
 }
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, service: "doodlehop" });
+  res.json({
+    ok: true,
+    service: "doodlehop",
+    scores: getStorageMode(),
+  });
 });
 
 app.get("/api/downloads", (_req, res) => {
@@ -60,6 +68,8 @@ app.get("/api/downloads", (_req, res) => {
   });
 });
 
+app.use("/api/scores", scoresRouter);
+
 app.use(
   "/downloads",
   express.static(DOWNLOADS_DIR, {
@@ -77,7 +87,16 @@ app.get("*", (_req, res) => {
   res.sendFile(path.join(WEB_ROOT, "index.html"));
 });
 
-const port = Number(process.env.PORT || 8080);
-app.listen(port, () => {
-  console.log(`DoodleHopHop server listening on port ${port}`);
+async function start() {
+  await initDb();
+
+  const port = Number(process.env.PORT || 8080);
+  app.listen(port, () => {
+    console.log(`DoodleHopHop server listening on port ${port}`);
+  });
+}
+
+start().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
 });

@@ -10,7 +10,7 @@ Available as a **desktop app** (JavaFX) and a **web app** (HTML5 Canvas), with i
 - Six platform types: normal, bouncy, horizontal-moving, vertical-moving, disappearing, and bounce-then-break
 - Auto-scrolling camera and score that increases as you climb
 - Screen wrap-around on the left and right edges
-- High score tracking (session for desktop, `localStorage` for web)
+- Global leaderboard with usernames (PostgreSQL on Render, JSON file locally)
 - Restart button after game over
 
 ### Platform guide

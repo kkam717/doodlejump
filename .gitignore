@@ -8,6 +8,8 @@ web/downloads/*.exe
 server/downloads/*.dmg
 server/downloads/*.exe
 !server/downloads/.gitkeep
+!server/data/.gitkeep
+server/data/highscores.json
 node_modules/
 server/node_modules/
 .idea/

@@ -9,7 +9,11 @@ Render Web Service (Node/Express)
 ├── /                  → web game (static)
 ├── /api/health        → health check
 ├── /api/downloads     → download metadata (local file or GitHub Release URL)
+├── /api/scores        → leaderboard + save high scores by username
 └── /downloads/*       → direct installer downloads (when files exist on disk)
+
+Render PostgreSQL (free)
+└── high_scores table  → persistent username/score leaderboard
 ```
 
 Installers are **not committed to git** (they are too large). They are published to **GitHub Releases**, and Render uses environment variables to point download links at those files.
@@ -54,7 +58,9 @@ This uploads `.dmg` / `.exe` files and prints the URLs to use on Render.
 1. Go to [Render Dashboard](https://dashboard.render.com/)
 2. Click **New → Blueprint**
 3. Connect the `kkam717/doodlejump` repository
-4. Render reads `render.yaml` and creates the `doodlehop` web service
+4. Render reads `render.yaml` and creates:
+   - the `doodlehop` web service
+   - the `doodlehop-db` PostgreSQL database (wired via `DATABASE_URL`)
 
 **Option B — Manual**
 
@@ -85,6 +91,9 @@ Click **Save Changes** — Render redeploys automatically.
 - Site loads: `https://<your-service>.onrender.com/`
 - Health: `https://<your-service>.onrender.com/api/health`
 - Downloads API: `https://<your-service>.onrender.com/api/downloads`
+- Leaderboard API: `https://<your-service>.onrender.com/api/scores`
+- Health should report `"scores": "postgres"` once the database is connected
+- Play a round, enter a username, and confirm your score appears on the leaderboard
 - Click **macOS (.dmg)** on the site — it should download from GitHub Releases
 
 ## Local development (matches production)
@@ -94,6 +103,8 @@ Click **Save Changes** — Render redeploys automatically.
 ```
 
 Open [http://localhost:8080/](http://localhost:8080/).
+
+Locally, scores are stored in `server/data/highscores.json` when `DATABASE_URL` is not set. On Render, scores use PostgreSQL automatically.
 
 If `web/downloads/` contains installers, they are served locally. Otherwise set env vars:
 

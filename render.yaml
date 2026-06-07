@@ -1,3 +1,9 @@
+databases:
+  - name: doodlehop-db
+    plan: free
+    databaseName: doodlehop
+    user: doodlehop
+
 services:
   - type: web
     name: doodlehop
@@ -10,6 +16,10 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: doodlehop-db
+          property: connectionString
       - key: DOWNLOAD_MAC_URL
         value: https://github.com/kkam717/doodlejump/releases/download/v1.0.0/DoodleHopHop-1.0.0.dmg
       - key: DOWNLOAD_WIN_URL

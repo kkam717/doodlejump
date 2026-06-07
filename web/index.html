@@ -17,15 +17,27 @@
       </header>
 
       <div class="layout">
-        <section class="game-shell">
+        <section id="game-shell" class="game-shell">
           <canvas id="game" width="450" height="800" aria-label="DoodleHopHop game"></canvas>
+          <div class="player-card">
+            <label class="player-label" for="username-input">Playing as</label>
+            <input
+              id="username-input"
+              class="username-input"
+              type="text"
+              maxlength="20"
+              placeholder="Your username"
+              autocomplete="username"
+            />
+          </div>
           <div class="score-bar">
             <span id="score">Score: 0</span>
             <span id="high-score">High Score: 0</span>
           </div>
+          <p id="score-status" class="score-status" aria-live="polite"></p>
           <div class="toolbar">
             <button id="restart-btn" type="button">Restart</button>
-            <button id="focus-btn" class="secondary" type="button">Focus Game</button>
+            <button id="fullscreen-btn" class="secondary" type="button">Fullscreen</button>
           </div>
           <div class="touch-controls">
             <button id="left-btn" type="button" aria-label="Move left">◀</button>
@@ -34,6 +46,11 @@
         </section>
 
         <aside class="sidebar">
+          <section class="card">
+            <h2>Leaderboard</h2>
+            <ol id="leaderboard" class="leaderboard"></ol>
+          </section>
+
           <section class="card">
             <h2>Download Desktop App</h2>
             <p>Installers are served from this site after you build them locally.</p>
@@ -80,34 +97,129 @@
     <script type="module">
       import { DoodleJumpGame } from "./js/game.js";
       import { setupDownloads } from "./js/downloads.js";
+      import {
+        getSavedUsername,
+        setupLeaderboard,
+        handleGameOverScore,
+        fetchUserBest,
+      } from "./js/scores.js";
 
       const canvas = document.getElementById("game");
       const scoreEl = document.getElementById("score");
       const highScoreEl = document.getElementById("high-score");
+      const scoreStatusEl = document.getElementById("score-status");
+      const usernameInput = document.getElementById("username-input");
+      const leaderboardEl = document.getElementById("leaderboard");
       const restartBtn = document.getElementById("restart-btn");
-      const focusBtn = document.getElementById("focus-btn");
+      const fullscreenBtn = document.getElementById("fullscreen-btn");
+      const gameShell = document.getElementById("game-shell");
       const leftBtn = document.getElementById("left-btn");
       const rightBtn = document.getElementById("right-btn");
+
+      usernameInput.value = getSavedUsername();
+
+      let refreshLeaderboard = async () => {};
+
+      async function syncPersonalBest() {
+        const username = usernameInput.value.trim();
+        if (!username) return;
+
+        try {
+          const entry = await fetchUserBest(username);
+          if (entry) {
+            game.setHighScore(entry.score);
+            highScoreEl.textContent = `High Score: ${game.highScore}`;
+          }
+        } catch {
+          // Keep local score if the API is unavailable.
+        }
+      }
 
       const game = new DoodleJumpGame(canvas, {
         onScore(score, highScore) {
           scoreEl.textContent = `Score: ${score}`;
           highScoreEl.textContent = `High Score: ${highScore}`;
         },
-        onGameOver(highScore, isNewHigh) {
+        async onGameOver(finalScore, highScore, isNewHigh) {
           highScoreEl.textContent = isNewHigh
             ? "New High Score!"
             : `High Score: ${highScore}`;
+
+          const result = await handleGameOverScore({
+            username: usernameInput.value,
+            score: finalScore,
+            statusEl: scoreStatusEl,
+            refreshLeaderboard,
+          });
+          if (result) {
+            game.setHighScore(result.score);
+          }
         },
       });
 
       restartBtn.addEventListener("click", () => game.restart());
-      focusBtn.addEventListener("click", () => canvas.focus());
+
+      function resizeCanvasForFullscreen() {
+        if (document.fullscreenElement !== gameShell) {
+          canvas.style.width = "";
+          canvas.style.height = "";
+          return;
+        }
+
+        const controlsHeight = 140;
+        const padding = 32;
+        const maxWidth = gameShell.clientWidth - padding;
+        const maxHeight = gameShell.clientHeight - controlsHeight;
+        const aspect = 450 / 800;
+        let height = maxHeight;
+        let width = height * aspect;
+
+        if (width > maxWidth) {
+          width = maxWidth;
+          height = width / aspect;
+        }
+
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+      }
+
+      function updateFullscreenButton() {
+        const isFullscreen = document.fullscreenElement === gameShell;
+        fullscreenBtn.textContent = isFullscreen ? "Exit Fullscreen" : "Fullscreen";
+        resizeCanvasForFullscreen();
+        canvas.focus();
+      }
+
+      async function toggleFullscreen() {
+        try {
+          if (document.fullscreenElement === gameShell) {
+            await document.exitFullscreen();
+          } else {
+            await gameShell.requestFullscreen();
+          }
+        } catch (error) {
+          console.error("Fullscreen not supported:", error);
+        }
+      }
+
+      fullscreenBtn.addEventListener("click", toggleFullscreen);
+      document.addEventListener("fullscreenchange", updateFullscreenButton);
+      window.addEventListener("resize", resizeCanvasForFullscreen);
+
       canvas.tabIndex = 0;
       canvas.focus();
 
       leftBtn.addEventListener("click", () => game.moveLeft());
       rightBtn.addEventListener("click", () => game.moveRight());
+
+      refreshLeaderboard = await setupLeaderboard({
+        listEl: leaderboardEl,
+        usernameInput,
+        statusEl: scoreStatusEl,
+      });
+
+      usernameInput.addEventListener("change", syncPersonalBest);
+      await syncPersonalBest();
 
       setupDownloads();
       game.start();

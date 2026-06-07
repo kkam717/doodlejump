@@ -96,14 +96,18 @@ export class DoodleJumpGame {
     this.running = false;
     this.gameOver = false;
 
+    this.highScore = 0;
     this.reset();
     this.bindInput();
+  }
+
+  setHighScore(score) {
+    this.highScore = Math.max(this.highScore, Number(score) || 0);
   }
 
   reset() {
     this.platforms = [];
     this.score = 0;
-    this.highScore = Number(localStorage.getItem("doodlehop-highscore") || 0);
     this.gameOver = false;
     this.running = true;
     this.accumulator = 0;
@@ -202,7 +206,6 @@ export class DoodleJumpGame {
 
     if (this.score > this.highScore) {
       this.highScore = gameScoreInt;
-      localStorage.setItem("doodlehop-highscore", String(this.highScore));
     }
 
     this.onScore(gameScoreInt, this.highScore, false);
@@ -392,9 +395,10 @@ export class DoodleJumpGame {
   checkGameOver() {
     if (this.player.y > C.ROOT_HEIGHT) {
       this.gameOver = true;
-      const isNewHigh = Math.floor(this.score) === this.highScore;
-      this.onGameOver(this.highScore, isNewHigh);
-      this.onScore(Math.floor(this.score), this.highScore, true);
+      const finalScore = Math.floor(this.score);
+      const isNewHigh = finalScore >= this.highScore;
+      this.onGameOver(finalScore, this.highScore, isNewHigh);
+      this.onScore(finalScore, this.highScore, true);
     }
   }
 
