@@ -1,16 +1,45 @@
-import { apiFetch, FALLBACK_DOWNLOADS, isBackendConfigured } from "./config.js";
+import { apiFetch, isBackendConfigured } from "./config.js";
+
+const RELEASE_API =
+  "https://api.github.com/repos/kkam717/doodlejump/releases/tags/v1.0.0";
+
+const ASSET_FILES = {
+  mac: "DoodleHopHop-1.0.0.dmg",
+  win: "DoodleHopHop-1.0.0.exe",
+};
+
+async function fetchReleaseAssets() {
+  const response = await fetch(RELEASE_API);
+  if (!response.ok) {
+    throw new Error("release unavailable");
+  }
+
+  const release = await response.json();
+  const assets = {};
+  for (const asset of release.assets || []) {
+    assets[asset.name] = asset;
+  }
+  return assets;
+}
 
 export async function setupDownloads() {
   const macLink = document.getElementById("mac-download");
   const winLink = document.getElementById("win-download");
+
+  let assets = null;
+  try {
+    assets = await fetchReleaseAssets();
+  } catch {
+    assets = null;
+  }
 
   if (isBackendConfigured()) {
     try {
       const response = await apiFetch("/api/downloads");
       if (response.ok) {
         const data = await response.json();
-        configureLink(macLink, data.mac);
-        configureLink(winLink, data.win);
+        configureLink(macLink, data.mac, assets?.[ASSET_FILES.mac]);
+        configureLink(winLink, data.win, assets?.[ASSET_FILES.win]);
         return;
       }
     } catch {
@@ -18,26 +47,22 @@ export async function setupDownloads() {
     }
   }
 
-  configureDirectLink(macLink, FALLBACK_DOWNLOADS.mac, "DoodleHopHop-1.0.0.dmg");
-
-  const winAvailable = await isRemoteAssetAvailable(FALLBACK_DOWNLOADS.win);
-  if (winAvailable) {
-    configureDirectLink(winLink, FALLBACK_DOWNLOADS.win, "DoodleHopHop-1.0.0.exe");
-  } else {
-    configureUnavailable(winLink, "Windows build publishing — check back soon");
-  }
+  configureReleaseLink(macLink, assets?.[ASSET_FILES.mac], "macOS installer unavailable");
+  configureReleaseLink(winLink, assets?.[ASSET_FILES.win], "Windows installer unavailable");
 }
 
-async function isRemoteAssetAvailable(url) {
-  try {
-    const response = await fetch(url, { method: "HEAD" });
-    return response.ok;
-  } catch {
-    return false;
+function configureReleaseLink(link, asset, unavailableMessage) {
+  if (!link) return;
+
+  if (!asset?.browser_download_url) {
+    configureUnavailable(link, unavailableMessage);
+    return;
   }
+
+  configureDirectLink(link, asset.browser_download_url, asset.name, asset.size);
 }
 
-function configureDirectLink(link, url, fileName, unavailableMessage) {
+function configureDirectLink(link, url, fileName, sizeBytes) {
   if (!link) return;
 
   const note = link.querySelector("small");
@@ -48,34 +73,39 @@ function configureDirectLink(link, url, fileName, unavailableMessage) {
   link.removeAttribute("download");
 
   if (note) {
-    note.textContent = unavailableMessage || "Download from GitHub Releases";
+    if (sizeBytes) {
+      const mb = (sizeBytes / (1024 * 1024)).toFixed(0);
+      note.textContent = `Ready to download (${mb} MB)`;
+    } else {
+      note.textContent = `Ready to download — ${fileName}`;
+    }
   }
 }
 
-function configureLink(link, item) {
+function configureLink(link, item, asset) {
   if (!link) return;
 
-  const note = link.querySelector("small");
-  link.classList.remove("unavailable");
-
-  if (!item.available || !item.url) {
+  if (!item.available) {
     configureUnavailable(link, "Build with the package script, then publish a release");
     return;
   }
 
-  link.href = item.url;
-  link.removeAttribute("target");
-  link.removeAttribute("rel");
-  link.removeAttribute("download");
-
-  if (note) {
-    if (item.size) {
-      const mb = (item.size / (1024 * 1024)).toFixed(0);
-      note.textContent = `Ready to download (${mb} MB)`;
-    } else {
-      note.textContent = "Ready to download";
-    }
+  if (item.source === "local" && item.url) {
+    configureDirectLink(link, item.url, item.file, item.size);
+    return;
   }
+
+  if (asset?.browser_download_url) {
+    configureDirectLink(link, asset.browser_download_url, asset.name, asset.size);
+    return;
+  }
+
+  if (item.url) {
+    configureDirectLink(link, item.url, item.file, item.size);
+    return;
+  }
+
+  configureUnavailable(link, "Installer unavailable — check GitHub Releases");
 }
 
 function configureUnavailable(link, message) {
