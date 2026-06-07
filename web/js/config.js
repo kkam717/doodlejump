@@ -28,8 +28,17 @@ export function apiUrl(path) {
   return `${base}${path}`;
 }
 
-export async function apiFetch(path, options = {}) {
-  return fetch(apiUrl(path), options);
+const DEFAULT_FETCH_TIMEOUT_MS = 8000;
+
+export async function apiFetch(path, options = {}, timeoutMs = DEFAULT_FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(apiUrl(path), { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export function isBackendConfigured() {

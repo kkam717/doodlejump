@@ -105,14 +105,28 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
-export async function setupLeaderboard({
+function showLeaderboardLoading(listEl) {
+  listEl.innerHTML = "";
+  const loading = document.createElement("li");
+  loading.className = "leaderboard-empty";
+  loading.textContent = "Loading…";
+  listEl.appendChild(loading);
+}
+
+export function setupLeaderboard({
   listEl,
   usernameInput,
-  statusEl,
   backendStatusEl,
   limit = 10,
 }) {
   async function refresh() {
+    if (backendStatusEl) {
+      backendStatusEl.classList.remove("ok", "error", "warn");
+      backendStatusEl.textContent = "Backend: connecting…";
+      backendStatusEl.classList.add("warn");
+    }
+    showLeaderboardLoading(listEl);
+
     const health = await checkBackendHealth();
     if (backendStatusEl) {
       backendStatusEl.classList.remove("ok", "error", "warn");
@@ -130,10 +144,6 @@ export async function setupLeaderboard({
 
     if (!isBackendConfigured()) {
       renderLeaderboard(listEl, []);
-      if (statusEl) {
-        statusEl.textContent =
-          "Link your Render URL in the doodlehop-api-base meta tag (see DEPLOY.md).";
-      }
       return;
     }
 
@@ -142,9 +152,6 @@ export async function setupLeaderboard({
       renderLeaderboard(listEl, scores, usernameInput?.value?.trim() || "");
     } catch {
       renderLeaderboard(listEl, []);
-      if (statusEl && !statusEl.textContent.includes("Enter a username")) {
-        statusEl.textContent = "Leaderboard unavailable — check backend URL and CORS.";
-      }
     }
   }
 
@@ -158,7 +165,7 @@ export async function setupLeaderboard({
     });
   }
 
-  await refresh();
+  refresh();
   return refresh;
 }
 

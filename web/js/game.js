@@ -123,9 +123,19 @@ export class DoodleJumpGame {
     this.onScore(0, this.highScore, false);
   }
 
+  isTypingTarget(target) {
+    return (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      target?.isContentEditable
+    );
+  }
+
   bindInput() {
     this.handleKeyPress = (e) => {
       if (this.gameOver || !this.running) return;
+      if (this.isTypingTarget(e.target)) return;
 
       switch (e.key) {
         case "ArrowLeft":

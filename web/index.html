@@ -243,20 +243,20 @@
       leftBtn.addEventListener("click", () => game.moveLeft());
       rightBtn.addEventListener("click", () => game.moveRight());
 
-      refreshLeaderboard = await setupLeaderboard({
+      game.start();
+
+      refreshLeaderboard = setupLeaderboard({
         listEl: leaderboardEl,
         usernameInput,
-        statusEl: scoreStatusEl,
         backendStatusEl,
       });
 
       refreshLeaderboardBtn.addEventListener("click", () => refreshLeaderboard());
 
       usernameInput.addEventListener("change", syncPersonalBest);
-      await syncPersonalBest();
+      syncPersonalBest();
 
       setupDownloads();
-      game.start();
     </script>
   </body>
 </html>
