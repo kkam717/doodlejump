@@ -1,0 +1,61 @@
+README DoodleJump
+
+Overview:
+
+    Our DoodleJump program mimics the real "DoodleJump" game as designed by Lima Sky. We tried to recreate the
+    authentic version of DoodleJump with a squared-paper background, exact coloring of platforms, and the score
+    increments. We hope you enjoy the added features like our special platforms and restart button!
+
+    Our program has six classes: The App, Constants, Doodle, DoodleJump, PaneOrganizer, and Platform.
+
+    • In the App class, we created the scene (the window) of the Balaton application. We created a start method, in
+      which PaneOrganizer and Scene were instantiated. We passed in a getter method for root so all the written methods
+      and shapes in the pane can be shown within a constant boundary.
+    • In the Constants class, we declared the each of our constants in an organized way as type int, double,
+      color or string.
+    • In the Doodle shape class, we created the instance of our doodle, a golden rectangle with black outlining. We
+      set its position, and detected collision with the platforms.
+    • In the DoodleJump top-level logic class, we handle the timeline, key input, scrolling, intersection, spawning,
+      moving and anything game mechanics including our staple, very fancy "Game Over!" text.
+    • In the PaneOrganizer top-level graphical class, we created the border pane, the playerPlane, the score labels,
+     the quit button, our background image, and the buttonPane.
+    • In the Platform class, we handled the creation of our special platforms with their respective velocities,
+     colors, types, and positions. We decided to handle the moving of the platforms in the logical class, so that
+     platforms update with the timeline.
+
+Design Choices:
+
+    We used a switch statement to create the relation between a key press and movement movement methods. The switch
+    statement will evaluate each case of an arrow key pressed, and will return the corresponding movement of the
+    doodle in the playerPlane. We also used switch statements to set up the platform types after randomization.
+
+    We used a timeline so that the game platform moving, doodle bouncing, scrolling, score, wrapping is all  .
+    updated using a Lambda expression and KeyFrame that updates every 0.016 seconds.
+
+    We used if/else statements a lot because it seemed like a better solution for logical arguments. This was so
+    it would be easier to think about how the code works logically and how it convenes in graphics.
+
+    We used for, while, and for-each loops for effective iteration of statements described in our code. This was
+    FOR-EACH iterating through the platform arraylist to make them move for example. We used a WHILE loop to remove
+    platforms logically after they left the playerPane for example. Lastly, we used a FOR loop to add a
+    drop-shadow effect on our game over title.
+
+    We used arraylists to store the values of the platforms. This seemed like the best design solution instead of
+    declaring 6 different types of arrays in our platform class.
+
+Known Bugs:
+
+    There are no known bugs in our program.
+
+Debugging Collaborators
+
+    None.
+
+Hours Spent:
+
+    30 hours.
+
+DISCLAIMER!! All jumps are possible; our game is notably hard. If you have a problem completing a jump,
+please come to conceptual hours, and we'll help you make the jump. Shoot us an email beforehand...
+
+        Current record-score: 557 [We have proof]
