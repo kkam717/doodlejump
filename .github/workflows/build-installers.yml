@@ -65,6 +65,9 @@ jobs:
     if: ${{ !cancelled() && needs.build-windows.result == 'success' && needs.build-mac.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download installers
         uses: actions/download-artifact@v4
         with:
