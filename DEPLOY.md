@@ -1,4 +1,32 @@
-# Deploy DoodleHopHop to Render
+# Deploy DoodleHopHop
+
+## GitHub Pages (static game only)
+
+GitHub Pages only lets you pick **`/` (root)** or **`/docs`** as a publish folder — not `/web`.
+
+This repo uses a **GitHub Actions** workflow (`.github/workflows/pages.yml`) to deploy the `web/` folder instead.
+
+### Setup
+
+1. Push this repo to GitHub (the workflow file must be on `main`).
+2. Open **Settings → Pages** on the repository.
+3. Under **Build and deployment → Source**, choose **GitHub Actions** (not “Deploy from a branch”).
+4. After the next push to `main`, the **Deploy GitHub Pages** workflow runs automatically.
+5. Your site will be at **https://kkam717.github.io/doodlejump/**
+
+### Limitations on GitHub Pages
+
+GitHub Pages is static only. The game will run, but these need the Render backend:
+
+- Leaderboard (`/api/scores`)
+- Saving scores
+- Download API (`/api/downloads`)
+
+For the full experience (leaderboard, downloads, database), use **Render** below.
+
+---
+
+## Render (full app with backend)
 
 The live site runs as a **Node.js web service** on [Render](https://render.com). It serves the browser game and download links through a small backend API.
 
