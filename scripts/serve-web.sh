@@ -18,6 +18,15 @@ fi
 
 PORT="${PORT:-8080}"
 export PORT
+
+if lsof -i :"${PORT}" -sTCP:LISTEN -t >/dev/null 2>&1; then
+  echo "Port ${PORT} is already in use (likely an old static file server):" >&2
+  lsof -i :"${PORT}" -sTCP:LISTEN >&2
+  echo "Stop that process, then run this script again." >&2
+  exit 1
+fi
+
 echo "DoodleHopHop: http://localhost:${PORT}/"
 echo "Health check: http://localhost:${PORT}/api/health"
+echo "Use the root URL above — not /web/ (that path was for the old Python server)."
 npm start

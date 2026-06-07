@@ -12,6 +12,45 @@ const DOWNLOADS_DIR = path.join(__dirname, "downloads");
 const MAC_FILE = "DoodleHopHop-1.0.0.dmg";
 const WIN_FILE = "DoodleHopHop-1.0.0.exe";
 
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://kkam717.github.io",
+  /^https:\/\/[a-z0-9-]+\.github\.io$/i,
+];
+
+function getAllowedOrigins() {
+  const fromEnv = (process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return [...DEFAULT_ALLOWED_ORIGINS, ...fromEnv];
+}
+
+function isOriginAllowed(origin) {
+  return getAllowedOrigins().some((allowed) => {
+    if (allowed instanceof RegExp) {
+      return allowed.test(origin);
+    }
+    return allowed === origin;
+  });
+}
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && isOriginAllowed(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  }
+
+  if (req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+
+  next();
+});
+
 app.use(express.json({ limit: "16kb" }));
 
 function resolveDownload(fileName, envUrl) {

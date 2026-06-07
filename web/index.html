@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DoodleHopHop</title>
+    <!-- Set this to your Render URL when hosting on GitHub Pages, e.g. https://doodlehop.onrender.com -->
+    <meta name="doodlehop-api-base" content="" />
     <link rel="icon" type="image/png" href="assets/icons/favicon.png" />
     <link rel="apple-touch-icon" href="assets/icons/icon-256.png" />
     <link rel="stylesheet" href="css/style.css" />
@@ -36,6 +38,7 @@
           </div>
           <p id="score-status" class="score-status" aria-live="polite"></p>
           <div class="toolbar">
+            <button id="save-score-btn" type="button">Save to Leaderboard</button>
             <button id="restart-btn" type="button">Restart</button>
             <button id="fullscreen-btn" class="secondary" type="button">Fullscreen</button>
           </div>
@@ -47,8 +50,17 @@
 
         <aside class="sidebar">
           <section class="card">
-            <h2>Leaderboard</h2>
+            <div class="card-header">
+              <h2>Leaderboard</h2>
+              <button id="refresh-leaderboard-btn" class="text-button" type="button">
+                Refresh
+              </button>
+            </div>
+            <p id="backend-status" class="backend-status">Checking backend…</p>
             <ol id="leaderboard" class="leaderboard"></ol>
+            <p class="leaderboard-help">
+              Enter a username, play a round, then click <strong>Save to Leaderboard</strong>.
+            </p>
           </section>
 
           <section class="card">
@@ -100,7 +112,7 @@
       import {
         getSavedUsername,
         setupLeaderboard,
-        handleGameOverScore,
+        saveScoreToLeaderboard,
         fetchUserBest,
       } from "./js/scores.js";
 
@@ -110,8 +122,11 @@
       const scoreStatusEl = document.getElementById("score-status");
       const usernameInput = document.getElementById("username-input");
       const leaderboardEl = document.getElementById("leaderboard");
+      const saveScoreBtn = document.getElementById("save-score-btn");
       const restartBtn = document.getElementById("restart-btn");
       const fullscreenBtn = document.getElementById("fullscreen-btn");
+      const refreshLeaderboardBtn = document.getElementById("refresh-leaderboard-btn");
+      const backendStatusEl = document.getElementById("backend-status");
       const gameShell = document.getElementById("game-shell");
       const leftBtn = document.getElementById("left-btn");
       const rightBtn = document.getElementById("right-btn");
@@ -119,6 +134,7 @@
       usernameInput.value = getSavedUsername();
 
       let refreshLeaderboard = async () => {};
+      let lastSavableScore = 0;
 
       async function syncPersonalBest() {
         const username = usernameInput.value.trim();
@@ -140,24 +156,39 @@
           scoreEl.textContent = `Score: ${score}`;
           highScoreEl.textContent = `High Score: ${highScore}`;
         },
-        async onGameOver(finalScore, highScore, isNewHigh) {
+        onGameOver(finalScore, highScore, isNewHigh) {
+          lastSavableScore = finalScore;
+          saveScoreBtn.disabled = false;
           highScoreEl.textContent = isNewHigh
             ? "New High Score!"
             : `High Score: ${highScore}`;
-
-          const result = await handleGameOverScore({
-            username: usernameInput.value,
-            score: finalScore,
-            statusEl: scoreStatusEl,
-            refreshLeaderboard,
-          });
-          if (result) {
-            game.setHighScore(result.score);
-          }
+          scoreStatusEl.textContent = `Game over with ${finalScore}. Save to leaderboard when ready.`;
         },
       });
 
-      restartBtn.addEventListener("click", () => game.restart());
+      async function saveCurrentScore() {
+        const score = game.gameOver ? lastSavableScore : Math.floor(game.score);
+        const result = await saveScoreToLeaderboard({
+          username: usernameInput.value,
+          score,
+          statusEl: scoreStatusEl,
+          refreshLeaderboard,
+        });
+        if (result) {
+          game.setHighScore(result.score);
+          highScoreEl.textContent = `High Score: ${game.highScore}`;
+        }
+      }
+
+      saveScoreBtn.addEventListener("click", saveCurrentScore);
+      saveScoreBtn.disabled = true;
+
+      restartBtn.addEventListener("click", () => {
+        game.restart();
+        lastSavableScore = 0;
+        saveScoreBtn.disabled = true;
+        scoreStatusEl.textContent = "";
+      });
 
       function resizeCanvasForFullscreen() {
         if (document.fullscreenElement !== gameShell) {
@@ -216,7 +247,10 @@
         listEl: leaderboardEl,
         usernameInput,
         statusEl: scoreStatusEl,
+        backendStatusEl,
       });
+
+      refreshLeaderboardBtn.addEventListener("click", () => refreshLeaderboard());
 
       usernameInput.addEventListener("change", syncPersonalBest);
       await syncPersonalBest();

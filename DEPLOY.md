@@ -14,15 +14,33 @@ This repo uses a **GitHub Actions** workflow (`.github/workflows/pages.yml`) to 
 4. After the next push to `main`, the **Deploy GitHub Pages** workflow runs automatically.
 5. Your site will be at **https://kkam717.github.io/doodlejump/**
 
-### Limitations on GitHub Pages
+### Link GitHub Pages to the Render backend
 
-GitHub Pages is static only. The game will run, but these need the Render backend:
+GitHub Pages cannot run the Node API. Point the static site at your Render service:
 
-- Leaderboard (`/api/scores`)
-- Saving scores
-- Download API (`/api/downloads`)
+1. Deploy the backend on Render first (see below) and copy your URL, e.g. `https://doodlehop.onrender.com`
+2. On GitHub: **Settings → Secrets and variables → Actions → Variables**
+3. Add **`API_BASE_URL`** = `https://doodlehop.onrender.com` (your real Render URL, no trailing slash)
+4. Push to `main` — the Pages workflow injects this into `web/index.html` automatically
 
-For the full experience (leaderboard, downloads, database), use **Render** below.
+Or set it manually in `web/index.html`:
+
+```html
+<meta name="doodlehop-api-base" content="https://doodlehop.onrender.com" />
+```
+
+The Render server allows CORS from `*.github.io`, so leaderboard and score saving work from Pages once linked.
+
+**Mac downloads** fall back to GitHub Releases if the API is unreachable. **Windows** downloads appear when you publish a `.exe` release.
+
+### Using the leaderboard
+
+1. Enter a **username** above the game
+2. Play until game over
+3. Click **Save to Leaderboard** (enabled after game over)
+4. Use **Refresh** in the sidebar to update the list
+
+For the full experience without linking, deploy everything on **Render** below (frontend + API on one URL).
 
 ---
 
